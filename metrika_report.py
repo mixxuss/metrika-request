@@ -50,13 +50,25 @@ def group_params(base_params, output_params, date_params, filter_params):
     return all_params
 
 
-def make_filter(section_list, traffic_source="\'organic\'", minus_word_list=['baby', 'беби', 'бэби']):
-    minus_words = '(ym:s:searchPhrase!@\'baby\' AND ym:s:searchPhrase!@\'бэби\' AND ym:s:searchPhrase!@\'беби\')'
-    return '(ym:s:trafficSource=={}) AND {} AND {}'.format(traffic_source, minus_words, section_list)
+def make_filter(section_list, traffic_source='organic'):
+    minus_words = make_minus_word_param()
+    return '(ym:s:trafficSource==\'{}\') AND {} AND {}'.format(traffic_source, minus_words, '{}'.format([section for section in section_list]))
 
 
 def make_minus_word_param(minus_words_list=['baby', 'беби', 'бэби']):
-    return ' AND '.join(['ym:s:searchPhrase!@\'{}\''.format(minus_word) for minus_word in minus_words_list])
+    if len(minus_words_list) > 1:
+        minus_words_str = ' AND '.join(['ym:s:searchPhrase!@\'{}\''.format(minus_word) for minus_word in minus_words_list])
+        return '({})'.format(minus_words_str)
+    else:
+        return ['ym:s:searchPhrase!@\'{}\''.format(minus_word) for minus_word in minus_words_list]
+
+
+def make_sections_param(section_list=['/community/*']):
+    if len(section_list) > 1:
+        section_param = ' AND '.join(['ym:s:startURLPathFull=*\'{}\''.format(section) for section in section_list])
+        return '({})'.format(section_param)
+    else:
+        return '(ym:s:startURLPathFull=*\'{}\')'.format(section_list[0])
 
 
 def make_params_list(params):
@@ -64,7 +76,8 @@ def make_params_list(params):
 
 
 if __name__ == '__main__':
-    make_minus_word_param()
+    print(make_minus_word_param())
+    print(make_sections_param())
 
 
     '''
