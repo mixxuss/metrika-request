@@ -1,5 +1,4 @@
 import requests
-import re
 from openpyxl import Workbook
 
 
@@ -14,7 +13,7 @@ def request_metrika_api_compare(params, url='https://api-metrika.yandex.ru/stat/
     return api_response.json()
 
 
-def make_base_params(oauth_token='', counter_id='26444823', is_pretty=True):
+def make_base_params(oauth_token='AQAAAAAT07WxAAQP6j2oJLgK80E0sM-fbCEx6eo', counter_id='29175210', is_pretty=True):
     return {
         'oauth_token': oauth_token,
         'ids': counter_id,
@@ -81,35 +80,68 @@ def create_xlsx_worksheet(excel_file, date):
     return ex_page
 
 
-def output_to_xlsx_worksheet(response, ex_page, row):
+def output_to_xlsx_worksheet(response, ex_page, row, section_list):
     # for response in response_func:
-    ex_page['A{}'.format(row)] = 'PUT SECTION HERE'
+    ex_page['A{}'.format(row)] = section_list[2]
     ex_page['B{}'.format(row)] = 'TOTAL'
-    ex_page['C{}'.format(row)] = str(response['totals']['a'][0])
-    ex_page['D{}'.format(row)] = str(response['totals']['b'][0])
+    try:
+        total_a = response['totals']['a'][0]
+    except IndexError:
+        total_a = 0
+    ex_page['C{}'.format(row)] = total_a
+    try:
+        total_b = response['totals']['b'][0]
+    except IndexError:
+        total_b = 0
+    ex_page['D{}'.format(row)] = total_b
+    try:
+        ex_page['E{}'.format(row)] = total_b / total_a * 100
+    except ZeroDivisionError:
+        ex_page['E{}'.format(row)] = 'Cant calc'
     row += 1
-    ex_page['B{}'.format(row)] = str(response['data'][0]['dimensions'][0]['name'])
-    ex_page['C{}'.format(row)] = str(response['data'][0]['metrics']['a'][0])
-    ex_page['D{}'.format(row)] = str(response['data'][0]['metrics']['b'][0])
+    try:
+        ex_page['B{}'.format(row)] = response['data'][0]['dimensions'][0]['name']
+    except IndexError:
+        ex_page['B{}'.format(row)] = 0
+    try:
+        first_a = response['data'][0]['metrics']['a'][0]
+    except IndexError:
+        first_a = 0
+    ex_page['C{}'.format(row)] = first_a
+    try:
+        first_b = response['data'][0]['metrics']['b'][0]
+    except IndexError:
+        first_b = 0
+    ex_page['D{}'.format(row)] = first_b
+    try:
+        ex_page['E{}'.format(row)] = first_b / first_a * 100
+    except ZeroDivisionError:
+        ex_page['E{}'.format(row)] = 'Cant calc'
     row += 1
-    ex_page['B{}'.format(row)] = str(response['data'][1]['dimensions'][0]['name'])
-    ex_page['C{}'.format(row)] = str(response['data'][1]['metrics']['a'][0])
-    ex_page['D{}'.format(row)] = str(response['data'][1]['metrics']['b'][0])
+    try:
+        ex_page['B{}'.format(row)] = response['data'][1]['dimensions'][0]['name']
+    except IndexError:
+        ex_page['B{}'.format(row)] = 0
+    try:
+        second_a = response['data'][1]['metrics']['a'][0]
+    except IndexError:
+        second_a = 0
+    ex_page['C{}'.format(row)] = second_a
+    try:
+        second_b = response['data'][1]['metrics']['b'][0]
+    except IndexError:
+        second_b = 0
+    ex_page['D{}'.format(row)] = second_b
+    try:
+        ex_page['E{}'.format(row)] = second_b / second_a * 100
+    except ZeroDivisionError:
+        ex_page['E{}'.format(row)] = 'Cant calc'
     row += 1
-    return ex_page
-    # excel_file.save('Metrika.xlsx')
-
-
-def xlsx_constructor():
-    pass
+    return ex_page, row
 
 
 def save_xlsx_file(excel_file, filename='Metrika.xlsx'):
     excel_file.save(filename)
-
-
-def combine_params_list(params):
-    pass
 
 
 if __name__ == '__main__':
@@ -121,8 +153,9 @@ if __name__ == '__main__':
 
     for date in dates:
         ex_page = create_xlsx_worksheet(excel_file, date)
+        row = 1
+        section_number_from_list = 1
         for section in sections:
-            row = 1
             params = group_params(base_params=make_base_params(),
                                output_params=make_output_params(),
                                date_params=make_date_params(date),
@@ -131,8 +164,8 @@ if __name__ == '__main__':
             response = request_metrika_api_compare(params)
             print(response)
             print(type(response))
-            ex_page = output_to_xlsx_worksheet(response, ex_page, row)
-            row += 3
+            section_number_from_list += 1
+            ex_page, row = output_to_xlsx_worksheet(response, ex_page, row, section_list=section)
     save_xlsx_file(excel_file)
 
     # params = {'dimensions': 'ym:s:<attribution>SourceEngine', 'filters_b': "(ym:s:trafficSource=='organic') AND (ym:s:searchPhrase!@'baby' AND ym:s:searchPhrase!@'бэби' AND ym:s:searchPhrase!@'беби') AND (ym:s:startURLPathFull=*'/community/*') AND (ym:u:totalVisitsDuration>=180)", 'pretty': 'true', 'limit': 100, 'oauth_token': 'AQAAAAAT07WxAAQP6j2oJLgK80E0sM-fbCEx6eo', 'date2_a': '2017-01-29', 'date1_b': '2017-01-23', 'date1_a': '2017-01-23', 'metrics': 'ym:s:visits', 'date2_b': '2017-01-29', 'group': 'week', 'ids': '26444823', 'accuracy': 'high', 'filters_a': "(ym:s:trafficSource=='organic') AND (ym:s:searchPhrase!@'baby' AND ym:s:searchPhrase!@'бэби' AND ym:s:searchPhrase!@'беби') AND (ym:s:startURLPathFull=*'/community/*')"}
@@ -142,28 +175,8 @@ if __name__ == '__main__':
     # print(response['totals']['a'][0], response['totals']['b'][0])
     # output_to_xlsx(response)
 
-
-
-
     '''
-    dates_list = [
-        {'date1_a': '2017-01-23', 'date2_a': '2017-01-29', 'date1_b': '2017-01-23', 'date2_b': '2017-01-29'},
-        {'date1_a': '2017-02-06', 'date2_a': '2017-02-12', 'date1_b': '2017-02-06', 'date2_b': '2017-02-12'}
-    ]
-    section_list = [['ym:s:startURLPathFull' '=*', '/community/*'],
-                    ['ym:s:startURLPathFull', '=*', '/answers/*']]
-
-    params = group_params(make_base_params(),
-                          make_output_params(),
-                          make_date_params('2017-02-09', '2017-02-10', '2017-02-09', '2017-02-10'),
-                          make_filter_params(filters_a='(ym:s:trafficSource==\'organic\') AND (ym:s:searchPhrase!@\'baby\' AND ym:s:searchPhrase!@\'бэби\' AND ym:s:searchPhrase!@\'беби\') AND (ym:s:startURLPathFull=*\'/community/*\')',
-                                             filters_b='(ym:s:trafficSource==\'organic\') AND (ym:s:searchPhrase!@\'baby\' AND ym:s:searchPhrase!@\'бэби\' AND ym:s:searchPhrase!@\'беби\') AND (ym:s:startURLPathFull=*\'/community/*\') AND (ym:u:totalVisitsDuration>=180)'))
-    print(params)
-    print(request_metrika_api_compare(params=params))
-    '''
-
-    '''
-    OAuth_key = 'AQAAAAAT07WxAAQP6j2oJLgK80E0sM-fbCEx6eo'
+    OAuth_key = 'PUT'
     ids = '26444823'
     url = 'https://api-metrika.yandex.ru/stat/v1/data/comparison'
     params = {
