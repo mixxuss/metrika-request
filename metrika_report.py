@@ -13,7 +13,7 @@ def request_metrika_api_compare(params, url='https://api-metrika.yandex.ru/stat/
     return api_response.json()
 
 
-def make_base_params(oauth_token='AQAAAAAT07WxAAQP6j2oJLgK80E0sM-fbCEx6eo', counter_id='29175210', is_pretty=True):
+def make_base_params(oauth_token='PUT', counter_id='29175210', is_pretty=True):
     return {
         'oauth_token': oauth_token,
         'ids': counter_id,
