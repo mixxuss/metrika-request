@@ -13,7 +13,7 @@ def request_metrika_api_compare(params, url='https://api-metrika.yandex.ru/stat/
     return api_response.json()
 
 
-def make_base_params(oauth_token='PUT', counter_id='29175210', is_pretty=True):
+def make_base_params(oauth_token='PUT', counter_id='26444823', is_pretty=True):
     return {
         'oauth_token': oauth_token,
         'ids': counter_id,
@@ -83,7 +83,7 @@ def create_xlsx_worksheet(excel_file, date):
 def output_to_xlsx_worksheet(response, ex_page, row, section_list):
     # for response in response_func:
     ex_page['A{}'.format(row)] = section_list[2]
-    ex_page['B{}'.format(row)] = 'TOTAL'
+    ex_page['B{}'.format(row)] = 'ПС'
     try:
         total_a = response['totals']['a'][0]
     except IndexError:
@@ -95,7 +95,7 @@ def output_to_xlsx_worksheet(response, ex_page, row, section_list):
         total_b = 0
     ex_page['D{}'.format(row)] = total_b
     try:
-        ex_page['E{}'.format(row)] = total_b / total_a * 100
+        ex_page['E{}'.format(row)] = '{}%'.format(round(total_b / total_a * 100))
     except ZeroDivisionError:
         ex_page['E{}'.format(row)] = 'Cant calc'
     row += 1
@@ -114,7 +114,7 @@ def output_to_xlsx_worksheet(response, ex_page, row, section_list):
         first_b = 0
     ex_page['D{}'.format(row)] = first_b
     try:
-        ex_page['E{}'.format(row)] = first_b / first_a * 100
+        ex_page['E{}'.format(row)] = '{}%'.format(round(first_b / first_a * 100))
     except ZeroDivisionError:
         ex_page['E{}'.format(row)] = 'Cant calc'
     row += 1
@@ -133,7 +133,7 @@ def output_to_xlsx_worksheet(response, ex_page, row, section_list):
         second_b = 0
     ex_page['D{}'.format(row)] = second_b
     try:
-        ex_page['E{}'.format(row)] = second_b / second_a * 100
+        ex_page['E{}'.format(row)] = '{}%'.format(round(second_b / second_a * 100))
     except ZeroDivisionError:
         ex_page['E{}'.format(row)] = 'Cant calc'
     row += 1
@@ -163,7 +163,6 @@ if __name__ == '__main__':
             print(params)
             response = request_metrika_api_compare(params)
             print(response)
-            print(type(response))
             section_number_from_list += 1
             ex_page, row = output_to_xlsx_worksheet(response, ex_page, row, section_list=section)
     save_xlsx_file(excel_file)
